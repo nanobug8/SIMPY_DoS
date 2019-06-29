@@ -1,80 +1,118 @@
 from SimPy.Simulation import *
 import random
 import threading
+import matplotlib.pyplot as plt
+
 
 procesor=0
 threads= list()
+requestOnDoS=0
+totalR = 0
+t=0
 
 class SSLConnection(Process):
-    # genera arribos aleatorios
+
+    #############################
+    # generates random arrivals #
+    #############################
+
     def run(self, N, lamb, mu):
-        # genera los arribos de N entidades
         for i in range(N):
-            a = SSLPacket(str(i))  # str(i) es el identificador de cliente
+            a = SSLPacket(str(i))
             activate(a, a.newConnection(mu))
-            # calcula el tiempo del próximo arrivo...
-            t = random.expovariate(1./lamb)
-            # ... y lo planifica para el futuro (tiempo actual de la simulación + t
+            t = random.expovariate(lamb)
             yield hold, self, t
 
-def clientRenegotiation(id):
-    global procesor
-    while(procesor<=100):
-        timeout=300/1000
+def clientRenegotiation(id, R):
+    global t
 
-        tiempoarribo = now()
+    while(R>=0):
+        G.DoS.observe(t)
+        S.cantR += 1
+        time =random.uniform(0.045471023, 0.065548125)
+        t = time * S.cantR
+        R= R-1
 
-        t = (1. / 605)
-        print("R", id)
-        # planificamos el fin de servicio
-        G.clienteHello.observe(now() - tiempoarribo)
+        if(t>=120):
+            S.cantDoS += 1
+        else:
+            t -= time * S.cantR
 
-        procesor += 0.8
-        print("CPU " ,procesor,"\n")
-
-        # print(now(), "Fin Cliente ", self.id)
-        G.tiempoensistema.observe(now() - tiempoarribo)
-        G.ultimoensalir = now()
-        # yield release, self, G.procesor
-        # else:
-        # print('El procesador ya no responde  <DoS>' ,self.id)
-        if(procesor>=100):
-                print("SERVER NOT RESPONDING <DoS>")
 
 class SSLPacket(Process):
-    # se implementa init a los efectos de asignar un identif    logging.info("Thread %s: finishing", name)icador a esta instancia de cliente
     def __init__(self, id):
         Process.__init__(self)
         self.id=id
 
-    # modelamos el comportamiento de una entidad
+    ######################################
+    # we model the behavior of an entity #
+    ######################################
+
     def newConnection(self,mu):
-        global threads
-        print (now(), "Inicia Conexion", self.id)
-        yield hold,self,  mu
-        x=threading.Thread(target=clientRenegotiation, args=(self.id,))
+        global threadsrequestOnDoS
+        yield hold,self, mu
+        R = random.randint(0,100)
+        x = threading.Thread(target=clientRenegotiation, args=(id, R,))
         threads.append(x)
         x.start()
-
 
 class G:
     procesor = 'dummy'
     tiempoensistema=Monitor('Tiempo en el sistema')
-    clienteHello = Monitor('Envia client Hello de tantos K de tamano')
-    ultimoensalir=0
+    clienteHello = Monitor('Envia client from SimPy.Simulation import *Hello de tantos K de tamano')
+    ultimoensalir = 0
+    DoS=Monitor('Many times server is not responding')
+
+class S:
+    cantR = 0
+    cantDoS = 0
 
 
-def model(c, N, lamb, mu, maxtime, rvseed):
-    # inicialización del motor de simulación y semilla
+
+def model(c, N, lamb, mu,maxtime, rvseed):
+    # Initialization of the simulation engine and seed
+    # c: number of cores
+    # N: number of arrivals to generate for the simulation
+    # lamb: arrival rate
+    # mu: service rate
+    # maxtime: maximum simulation time
+    # rvseed: seed for random values
+
     initialize()
     random.seed(rvseed)
-    # definimos el recurso G.server con "c" unidades (será un parámetro de la simulación)
     G.procesor = Resource(c)
-    #  ejecución
+
+    #############################
+    #         Execution         #
+    #############################
+
     s = SSLConnection()
-    activate(s, s.run(N, lamb, mu))
+    activate(s, s.run(N, lamb,mu))
     simulate(until=maxtime)
 
 
-# lamb=tiempo entre arribos (media); mu=tiempo de servicio (media)
-model(c=4, N=500, lamb=0.5, mu=0.6, maxtime=1000,rvseed=1234)
+acumR = 0
+acumDoS = 0
+
+0
+iterations=1
+for i in range(iterations):
+    sem = random.randint(1, 500)
+    model(c=1, N=150, lamb=1000, mu=0.01, maxtime=1000,rvseed=sem)
+
+    acumR += S.cantR
+    acumDoS += S.cantDoS
+
+    # cleaning vars
+    S.cantR = 0
+    S.cantDoS = 0
+
+
+print(" ---------------------------------------------------------------------")
+print("#Renegotiations:",acumR/iterations)
+print("#Request on DoS:",acumDoS/iterations)
+print("mean time DoS: ", G.DoS.mean())
+print (" ---------------------------------------------------------------------")
+
+plt.plot(G.DoS.tseries(),G.DoS.yseries())
+plt.show()
