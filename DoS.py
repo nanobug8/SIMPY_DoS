@@ -91,7 +91,7 @@ acum200OK = 0
 iterations = 100
 for i in range(iterations):
     sem = random.randint(1, 500)
-    model(N=150, lamb=1000, mu=0.01, maxtime=1000, rvseed=sem)
+    model(N=50, lamb=1000, mu=0.01, maxtime=1000, rvseed=sem)
 
     acumR += S.cantR
     acumDoS += S.cantDoS
