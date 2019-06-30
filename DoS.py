@@ -3,12 +3,8 @@ import random
 import threading
 import matplotlib.pyplot as plt
 
-
-procesor=0
-threads= list()
-requestOnDoS=0
-totalR = 0
-t=0
+threads = list()
+t = 1
 
 class SSLConnection(Process):
 
@@ -25,19 +21,21 @@ class SSLConnection(Process):
 
 def clientRenegotiation(id, R):
     global t
-
-    while(R>=0):
-        G.DoS.observe(t)
+    G.DoS.observe(t)
+    while R >= 0:
         S.cantR += 1
-        time =random.uniform(0.045471023, 0.065548125)
+        time = random.uniform(0.0045471023, 0.0065548125) # in seconds
         t = time * S.cantR
-        R= R-1
+        R = R-1
 
-        if(t>=120):
+        if t >= 120:
+            G.DoS.observe(t)
             S.cantDoS += 1
-        else:
-            t -= time * S.cantR
 
+        else:
+            G.success.observe(t)
+            t -= time * S.cantR
+            S.OK_200 += 1
 
 class SSLPacket(Process):
     def __init__(self, id):
@@ -49,29 +47,25 @@ class SSLPacket(Process):
     ######################################
 
     def newConnection(self,mu):
-        global threadsrequestOnDoS
+        global threads
         yield hold,self, mu
-        R = random.randint(0,100)
+        R = random.randint(0,2000)
         x = threading.Thread(target=clientRenegotiation, args=(id, R,))
         threads.append(x)
         x.start()
 
 class G:
-    procesor = 'dummy'
-    tiempoensistema=Monitor('Tiempo en el sistema')
-    clienteHello = Monitor('Envia client from SimPy.Simulation import *Hello de tantos K de tamano')
-    ultimoensalir = 0
-    DoS=Monitor('Many times server is not responding')
+    DoS = Monitor('Many times server is not responding')
+    success = Monitor('Count 200 OK responses')
 
 class S:
     cantR = 0
     cantDoS = 0
+    OK_200 = 0
 
 
-
-def model(c, N, lamb, mu,maxtime, rvseed):
+def model(N, lamb, mu, maxtime, rvseed):
     # Initialization of the simulation engine and seed
-    # c: number of cores
     # N: number of arrivals to generate for the simulation
     # lamb: arrival rate
     # mu: service rate
@@ -80,39 +74,48 @@ def model(c, N, lamb, mu,maxtime, rvseed):
 
     initialize()
     random.seed(rvseed)
-    G.procesor = Resource(c)
 
     #############################
     #         Execution         #
     #############################
 
     s = SSLConnection()
-    activate(s, s.run(N, lamb,mu))
+    activate(s, s.run(N, lamb, mu))
     simulate(until=maxtime)
 
 
 acumR = 0
 acumDoS = 0
+acum200OK = 0
 
-0
-iterations=1
+iterations = 100
 for i in range(iterations):
     sem = random.randint(1, 500)
-    model(c=1, N=150, lamb=1000, mu=0.01, maxtime=1000,rvseed=sem)
+    model(N=150, lamb=1000, mu=0.01, maxtime=1000, rvseed=sem)
 
     acumR += S.cantR
     acumDoS += S.cantDoS
+    acum200OK += S.OK_200
 
     # cleaning vars
     S.cantR = 0
     S.cantDoS = 0
+    S.OK_200 = 0
 
 
 print(" ---------------------------------------------------------------------")
-print("#Renegotiations:",acumR/iterations)
-print("#Request on DoS:",acumDoS/iterations)
-print("mean time DoS: ", G.DoS.mean())
+print("Renegotiations:",acumR)
+print("Request on DoS:",acumDoS)
+print('Success requests: ', acum200OK)
 print (" ---------------------------------------------------------------------")
 
-plt.plot(G.DoS.tseries(),G.DoS.yseries())
+
+labels = 'DoS time', 'Operative time'
+sizes = [G.DoS.mean(),G.success.mean()]
+explode = (0.1, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+
+fig1, ax1 = plt.subplots()
+ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
+ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
 plt.show()
