@@ -24,7 +24,7 @@ def clientRenegotiation(id, R):
     G.DoS.observe(t)
     while R >= 0:
         S.cantR += 1
-        time = random.uniform(0.0045471023, 0.0065548125) # in seconds
+        time = random.uniform(0.25471023, 0.85548125) # in seconds
         t = time * S.cantR
         R = R-1
 
