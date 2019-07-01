@@ -4,7 +4,7 @@ import threading
 import matplotlib.pyplot as plt
 
 threads = list()
-t = 1
+t = 0.00000001
 
 class SSLConnection(Process):
 
@@ -24,7 +24,7 @@ def clientRenegotiation(id, R):
     G.DoS.observe(t)
     while R >= 0:
         S.cantR += 1
-        time = random.uniform(0.0045471023, 0.0065548125) # in seconds
+        time = random.uniform(0.045471023, 0.0605548125) # in seconds
         t = time * S.cantR
         R = R-1
 
@@ -46,10 +46,10 @@ class SSLPacket(Process):
     # we model the behavior of an entity #
     ######################################
 
-    def newConnection(self,mu):
+    def newConnection(self, mu):
         global threads
         yield hold,self, mu
-        R = random.randint(0,2000)
+        R = random.randint(1000,2000)
         x = threading.Thread(target=clientRenegotiation, args=(id, R,))
         threads.append(x)
         x.start()
@@ -88,11 +88,10 @@ acumR = 0
 acumDoS = 0
 acum200OK = 0
 
-iterations = 100
+iterations = 1000
 for i in range(iterations):
     sem = random.randint(1, 500)
-    model(N=150, lamb=1000, mu=0.01, maxtime=1000, rvseed=sem)
-
+    model(N=10, lamb=1000, mu=0.01, maxtime=1000, rvseed=sem)
     acumR += S.cantR
     acumDoS += S.cantDoS
     acum200OK += S.OK_200
@@ -111,7 +110,7 @@ print (" ---------------------------------------------------------------------")
 
 
 labels = 'DoS time', 'Operative time'
-sizes = [G.DoS.mean(),G.success.mean()]
+sizes = [G.DoS.count()-1, G.success.count()]
 explode = (0.1, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
 
 fig1, ax1 = plt.subplots()
@@ -119,3 +118,4 @@ ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, s
 ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 
 plt.show()
+
