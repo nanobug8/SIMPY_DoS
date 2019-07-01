@@ -15,8 +15,8 @@ Requirements:
   N >> SSLConnections in parallel
   
 Varying this values, you can see differents results on the simulations.
-Note that time of CPU depends on Cypher Algorithm.
+Note that time of CPU depends on Cypher Algorithm and the CPU itself
 
 You can check https://vincent.bernat.ch/en/blog/2011-ssl-dos-mitigation (https://github.com/vincentbernat/ssl-dos)
-to get more detailed info for the simulation.
+to get more detailed info for your simulation.
 
