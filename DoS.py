@@ -24,7 +24,11 @@ def clientRenegotiation(id, R):
     G.DoS.observe(t)
     while R >= 0:
         S.cantR += 1
+<<<<<<< HEAD
         time = random.uniform(0.045471023, 0.0605548125) # in seconds
+=======
+        time = random.uniform(0.25471023, 0.85548125) # in seconds
+>>>>>>> 51ebea2d16f1aa10a32b276d5a0fbf6f5d19307b
         t = time * S.cantR
         R = R-1
 
@@ -91,7 +95,12 @@ acum200OK = 0
 iterations = 1000
 for i in range(iterations):
     sem = random.randint(1, 500)
+<<<<<<< HEAD
     model(N=10, lamb=1000, mu=0.01, maxtime=1000, rvseed=sem)
+=======
+    model(N=50, lamb=1000, mu=0.01, maxtime=1000, rvseed=sem)
+
+>>>>>>> 51ebea2d16f1aa10a32b276d5a0fbf6f5d19307b
     acumR += S.cantR
     acumDoS += S.cantDoS
     acum200OK += S.OK_200
@@ -110,12 +119,17 @@ print (" ---------------------------------------------------------------------")
 
 
 labels = 'DoS time', 'Operative time'
+<<<<<<< HEAD
 sizes = [G.DoS.count()-1, G.success.count()]
 explode = (0.1, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+=======
+sizes = [G.DoS.mean(),G.success.mean()]
+explode = (0.1, 0)
+>>>>>>> 51ebea2d16f1aa10a32b276d5a0fbf6f5d19307b
 
 fig1, ax1 = plt.subplots()
 ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
-ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+ax1.axis('equal')
 
 plt.show()
 
